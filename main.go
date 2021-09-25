@@ -153,7 +153,7 @@ func main() {
 		}
 
 		for _, row := range rows {
-			p := influxdb2.NewPoint("electricity", map[string]string{"unit": "kWh"}, map[string]interface{}{"consumption": row.Value}, row.IntervalStart)
+			p := influxdb2.NewPoint("electricity", map[string]string{"unit": "Wh"}, map[string]interface{}{"consumption": row.Value * 1000.}, row.IntervalStart)
 			writeAPI.WritePoint(p)
 		}
 	}
@@ -181,11 +181,15 @@ func main() {
 		// See https://developer.octopus.energy/docs/api/#consumption
 		unit := "m3"
 		if strings.ToLower(cfg.Gas.Type) == "smets1" {
-			unit = "kWh"
+			unit = "Wh"
 		}
 
 		for _, row := range rows {
-			p := influxdb2.NewPoint("gas", map[string]string{"unit": unit}, map[string]interface{}{"consumption": row.Value}, row.IntervalStart)
+			value := row.Value
+			if unit == "Wh" {
+				value *= 1000.
+			}
+			p := influxdb2.NewPoint("gas", map[string]string{"unit": unit}, map[string]interface{}{"consumption": value}, row.IntervalStart)
 			writeAPI.WritePoint(p)
 		}
 	}
