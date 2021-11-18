@@ -1,0 +1,33 @@
+---
+name: Build and push container image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build container image
+      id: build-image
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: octopusenergy-influxdb
+        tags: latest ${{ github.sha }}
+        containerfiles: |
+          ./Containerfile
+
+    - name: Push image to GHCR
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-image.outputs.image }}
+        tags: ${{ steps.build-image.outputs.tags }}
+        registry: ghcr.io/dannixon
+        username: ${{ github.repository_owner }}
+        password: ${{ github.token }}
